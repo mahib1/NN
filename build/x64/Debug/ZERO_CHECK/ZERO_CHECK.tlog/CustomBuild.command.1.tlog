@@ -1,0 +1,10 @@
+^C:\USERS\MAHIB\CODE\PROJECTS\NN\BUILD\CMAKEFILES\FEA4745A2EFF3520A964DA8F75878493\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/MAHIB/code/Projects/NN -BC:/Users/MAHIB/code/Projects/NN/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/MAHIB/code/Projects/NN/build/EigenTest.slnx
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
