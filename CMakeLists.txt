@@ -1,14 +1,30 @@
 cmake_minimum_required(VERSION 3.10)
-project(EigenTest)
+project(NeuralNetEigen)
 
-# 1. Tell CMake where to find Eigen
-# If installed system-wide, use: find_package(Eigen3 REQUIRED)
-# If you just downloaded the folder, set the path:
-set(EIGEN3_INCLUDE_DIR "C:\\Users\\MAHIB\\code\\git\\eigen")
-
-add_executable(EigenTest src/main.cpp)
-
+# 1. Configuration & Standards
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# 2. Add the include directory to your target
-target_include_directories(EigenTest PRIVATE ${EIGEN3_INCLUDE_DIR})
+# 2. Tell CMake where to find Eigen
+# Hardcoded path as per your setup
+set(EIGEN3_INCLUDE_DIR "C:\\Users\\MAHIB\\code\\git\\eigen")
+
+# 3. Define Shared Source Files
+# We list Layer.cpp here so both the main app and tests can use it
+set(COMMON_SOURCES 
+    src/Layer.cpp
+)
+
+# 4. Main Application Target (Release/Production)
+add_executable(main_app src/main.cpp ${COMMON_SOURCES})
+target_include_directories(main_app PRIVATE 
+    include 
+    ${EIGEN3_INCLUDE_DIR}
+)
+
+# 5. Unit Test Target
+add_executable(run_tests test/test_layer.cpp ${COMMON_SOURCES})
+target_include_directories(run_tests PRIVATE 
+    include 
+    ${EIGEN3_INCLUDE_DIR}
+)
