@@ -27,6 +27,12 @@ C:/Program Files/CMake/share/cmake-4.3/Modules/Platform/Windows-MSVC-CXX.cmake
 C:/Program Files/CMake/share/cmake-4.3/Modules/Platform/Windows-MSVC.cmake
 C:/Program Files/CMake/share/cmake-4.3/Modules/Platform/Windows.cmake
 C:/Program Files/CMake/share/cmake-4.3/Modules/Platform/WindowsPaths.cmake
+C:/Users/MAHIB/Downloads/SFML-2.6.1/lib/cmake/SFML/SFMLConfig.cmake
+C:/Users/MAHIB/Downloads/SFML-2.6.1/lib/cmake/SFML/SFMLConfigDependencies.cmake
+C:/Users/MAHIB/Downloads/SFML-2.6.1/lib/cmake/SFML/SFMLConfigVersion.cmake
+C:/Users/MAHIB/Downloads/SFML-2.6.1/lib/cmake/SFML/SFMLSharedTargets-debug.cmake
+C:/Users/MAHIB/Downloads/SFML-2.6.1/lib/cmake/SFML/SFMLSharedTargets-release.cmake
+C:/Users/MAHIB/Downloads/SFML-2.6.1/lib/cmake/SFML/SFMLSharedTargets.cmake
 C:/Users/MAHIB/code/Projects/NN/CMakeLists.txt
 C:/Users/MAHIB/code/Projects/NN/build/CMakeFiles/4.3.0-rc3/CMakeCCompiler.cmake
 C:/Users/MAHIB/code/Projects/NN/build/CMakeFiles/4.3.0-rc3/CMakeCXXCompiler.cmake
