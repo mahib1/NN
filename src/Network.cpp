@@ -1,4 +1,7 @@
 #include <Network.hpp>
+#include <iostream>
+#include <fstream>
+#include <filesystem>
 
 Eigen::MatrixXf NeuralNetwork::forward(Eigen::MatrixXf input) {
     for (auto& layer : layers) {
@@ -18,4 +21,50 @@ void NeuralNetwork::update(float lr) {
     for (auto& layer : layers) {
         layer->update(lr);
     }
+}
+
+void NeuralNetwork::save(const std::string& folder_name) {
+    // Create the directory if it doesn't exist
+    std::filesystem::create_directory(folder_name);
+
+    for (int i = 0; i < layers.size(); ++i) {
+        std::string w_path = folder_name + "/layer_" + std::to_string(i) + "_w.bin";
+        std::string b_path = folder_name + "/layer_" + std::to_string(i) + "_b.bin";
+
+        std::ofstream w_file(w_path, std::ios::binary);
+        std::ofstream b_file(b_path, std::ios::binary);
+
+        Eigen::MatrixXf w = layers[i]->getWeights();
+        Eigen::VectorXf b = layers[i]->getBiases();
+
+        // Write raw memory buffer to disk
+        w_file.write(reinterpret_cast<const char*>(w.data()), w.size() * sizeof(float));
+        b_file.write(reinterpret_cast<const char*>(b.data()), b.size() * sizeof(float));
+    }
+    std::cout << "Model weights saved to " << folder_name << std::endl;
+}
+
+void NeuralNetwork::load(const std::string& folder_name) {
+    for (int i = 0; i < layers.size(); ++i) {
+        std::string w_path = folder_name + "/layer_" + std::to_string(i) + "_w.bin";
+        std::string b_path = folder_name + "/layer_" + std::to_string(i) + "_b.bin";
+
+        std::ifstream w_file(w_path, std::ios::binary);
+        std::ifstream b_file(b_path, std::ios::binary);
+
+        if (!w_file || !b_file) {
+            throw std::runtime_error("Could not find weights in " + folder_name);
+        }
+
+        // Create temporary matrices to read into
+        Eigen::MatrixXf w = layers[i]->getWeights();
+        Eigen::VectorXf b = layers[i]->getBiases();
+
+        w_file.read(reinterpret_cast<char*>(w.data()), w.size() * sizeof(float));
+        b_file.read(reinterpret_cast<char*>(b.data()), b.size() * sizeof(float));
+
+        // Use your existing DevDenseLayer or a new setter to apply them
+        layers[i]->DevDenseLayer(w, b);
+    }
+    std::cout << "Model weights loaded successfully!" << std::endl;
 }

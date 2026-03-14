@@ -1,17 +1,50 @@
+#include <iostream>
+#include <filesystem>
 #include <SFML/Graphics.hpp>
 #include <Eigen/Dense>
-#include <iostream>
-#include <vector>
-#include <Network.hpp> // Assuming your wrapper is ready
+#include <cmath> // For sqrt
+#include "Network.hpp"
+#include "Layer.hpp"
+#include "MnistLoader.cpp"
+#include "Loss.hpp"
+#include "trainer.cpp"
 
-// Function to convert SFML drawing to Eigen Matrix
-// MNIST expects 28x28 normalized values (0.0 to 1.0)
+void evaluate(NeuralNetwork& net, const Eigen::MatrixXf& testX, const Eigen::MatrixXf& testY) {
+    int correct = 0;
+    Eigen::MatrixXf predictions = net.forward(testX);
+
+    for (int i = 0; i < testX.cols(); ++i) {
+        int label, pred;
+        testY.col(i).maxCoeff(&label);
+        predictions.col(i).maxCoeff(&pred);
+        if (label == pred) correct++;
+    }
+    std::cout << "Test Accuracy: " << (float)correct / testX.cols() * 100.0f << "%" << std::endl;
+}
+
+void debugPrint(const Eigen::MatrixXf& input) {
+  std::cout << "\n--- WHAT THE NETWORK SEES ---" << std::endl;
+  for (int i = 0; i < 28; i++) {
+      for (int j = 0; j < 28; j++) {
+          float val = input(i * 28 + j, 0);
+          if (val > 0.5f) std::cout << "##";
+          else if (val > 0.1f) std::cout << "..";
+          else std::cout << "  ";
+      }
+      std::cout << "\n";
+  }
+}
+
+int get_prediction(const Eigen::MatrixXf& output) {
+    int maxIndex = 0;
+    output.col(0).maxCoeff(&maxIndex);
+    return maxIndex;
+}
+
 Eigen::MatrixXf captureToEigen(const sf::Image& img) {
     Eigen::MatrixXf input(784, 1);
     for (int y = 0; y < 28; ++y) {
         for (int x = 0; x < 28; ++x) {
-            // MNIST is typically white text on black background
-            // We take the Red channel as our grayscale value
             float pixelValue = img.getPixel(x, y).r / 255.0f;
             input(y * 28 + x, 0) = pixelValue;
         }
@@ -20,63 +53,118 @@ Eigen::MatrixXf captureToEigen(const sf::Image& img) {
 }
 
 int main() {
-    // 1. Setup Window (Scales 28x28 up by 20x for visibility)
+    // --- 1. Network Initialization ---
+    NeuralNetwork model;
+    std::string model_folder = "C:/Users/MAHIB/code/Projects/NN/saved_model";
+    model.addLayer(new DenseLayer(784, 128, Activation::ReLU));
+    model.addLayer(new DenseLayer(128, 64, Activation::ReLU));
+    model.addLayer(new DenseLayer(64, 10, Activation::Softmax));
+
+    if(std::filesystem::exists(model_folder)) {
+        std::cout << "Loading existing model from " << model_folder << "..." << std::endl;
+        model.load(model_folder);
+    } else {
+        std::cout << "No saved model found. Initializing new model..." << std::endl;
+        try {
+            std::cout << "Loading MNIST Training Data..." << std::endl;
+            Eigen::MatrixXf trainX = MnistLoader::loadImages("C:/Users/MAHIB/code/Projects/NN/data/train-images.idx3-ubyte");
+            Eigen::MatrixXf trainY = MnistLoader::loadLabels("C:/Users/MAHIB/code/Projects/NN/data/train-labels.idx1-ubyte");
+            Eigen::MatrixXf testX = MnistLoader::loadImages("C:/Users/MAHIB/code/Projects/NN/data/t10k-images.idx3-ubyte");
+            Eigen::MatrixXf testY = MnistLoader::loadLabels("C:/Users/MAHIB/code/Projects/NN/data/t10k-labels.idx1-ubyte");
+
+            std::cout << "Training model for 5 epochs..." << std::endl;
+            int epochs = 4;
+            int batch_size = 5;
+
+            train(model, trainX, trainY, epochs, batch_size);
+            evaluate(model, testX, testY); 
+            model.save(model_folder); 
+            
+            std::cout << "Training Complete!" << std::endl;
+        } catch (const std::exception& e) {
+            std::cerr << "Error during setup/training: " << e.what() << std::endl;
+            return -1;
+        }
+    }
+
+    // --- 2. Create Anti-Aliased Brush Texture ---
+    const int brushRes = 64; // High res for the brush texture
+    sf::Texture brushTexture;
+    sf::Image brushImage;
+    brushImage.create(brushRes, brushRes);
+
+    for (int y = 0; y < brushRes; ++y) {
+        for (int x = 0; x < brushRes; ++x) {
+            float dx = x - brushRes / 2.0f;
+            float dy = y - brushRes / 2.0f;
+            float distance = std::sqrt(dx * dx + dy * dy);
+            float radius = brushRes / 2.0f;
+
+            // Smooth falloff for anti-aliasing
+            float alpha = 255.0f * std::max(0.0f, 1.0f - (distance / radius));
+            brushImage.setPixel(x, y, sf::Color(255, 255, 255, (sf::Uint8)alpha));
+        }
+    }
+    brushTexture.loadFromImage(brushImage);
+    brushTexture.setSmooth(true); // Bilinear filtering
+
+    // --- 3. SFML Window Setup ---
     const int scale = 20;
-    sf::RenderWindow window(sf::VideoMode(28 * scale, 28 * scale), "Write Something!");
+    sf::RenderWindow window(sf::VideoMode(28 * scale, 28 * scale), "Neural OCR - Draw a Digit");
     window.setFramerateLimit(60);
 
-    // 2. Create drawing surface (Actual 28x28 resolution)
     sf::RenderTexture canvas;
-    if (!canvas.create(28, 28)) return -1;
+    canvas.create(28, 28);
     canvas.clear(sf::Color::Black);
 
-    // --- Neural Network Setup Placeholder ---
-    // NeuralNetwork model; 
-    // model.load("my_weights.bin"); // We will implement this soon!
+    std::cout << "\n--- Ready! ---" << std::endl;
+    std::cout << "Draw a digit and press SPACE to predict." << std::endl;
+    std::cout << "Press 'C' to clear the canvas." << std::endl;
 
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed) window.close();
 
-            // Clear Canvas on 'C' key
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::C) {
                 canvas.clear(sf::Color::Black);
                 canvas.display();
-                std::cout << "Canvas Cleared" << std::endl;
+            }
+
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space) {
+                sf::Image img = canvas.getTexture().copyToImage();
+                Eigen::MatrixXf input = captureToEigen(img);
+                debugPrint(input);
+                
+                Eigen::MatrixXf output = model.forward(input);
+                int result = get_prediction(output);
+                
+                std::cout << "Prediction: " << result << " (Confidence: " 
+                          << output(result, 0) * 100 << "%)" << std::endl;
             }
         }
 
-        // 3. Handle Pen/Mouse Drawing
+        // Mouse/Pen Drawing with Anti-Aliasing
         if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-            sf::Vector2i localPos = sf::Mouse::getPosition(window);
-            
-            // Map window coordinates (560x560) back to 28x28
-            float tx = localPos.x / (float)scale;
-            float ty = localPos.y / (float)scale;
+            sf::Vector2i pos = sf::Mouse::getPosition(window);
+            float tx = pos.x / (float)scale;
+            float ty = pos.y / (float)scale;
 
-            // Brush setup
-            sf::CircleShape brush(1.2f); // Adjust thickness for better OCR results
-            brush.setFillColor(sf::Color::White);
-            brush.setOrigin(1.2f, 1.2f);
+            sf::Sprite brush(brushTexture);
+            // Setting the origin to the center of the brush
+            brush.setOrigin(brushRes / 2.0f, brushRes / 2.0f);
+            
+            // radius 2.0f in a 28x28 space means a diameter of 4.0f
+            float brushTargetDiameter = 3.0f; 
+            float brushScale = brushTargetDiameter / (float)brushRes;
+            brush.setScale(brushScale, brushScale);
             brush.setPosition(tx, ty);
 
+            // Use Alpha Blending to allow smooth edges to build up
             canvas.draw(brush);
             canvas.display();
         }
 
-        // 4. Run Prediction when Space is pressed
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
-            sf::Image img = canvas.getTexture().copyToImage();
-            Eigen::MatrixXf input = captureToEigen(img);
-
-            // Eigen::MatrixXf output = model.forward(input);
-            // int prediction = get_prediction(output);
-            
-            std::cout << "Captured 28x28 matrix. Ready for Neural Net!" << std::endl;
-        }
-
-        // Render the 28x28 canvas scaled up to the 560x560 window
         window.clear();
         sf::Sprite sprite(canvas.getTexture());
         sprite.setScale(scale, scale);

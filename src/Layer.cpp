@@ -44,6 +44,8 @@ Eigen::MatrixXf DenseLayer::computeLinearOp(const Eigen::MatrixXf& input) {
     return (weights * input).colwise() + biases;
 }
 
+//we use 2 types of layers, ReLU layer and Softmax Layer at the output
+//None Activation is just a placeholder linear layer, never to be reached
 Eigen::MatrixXf DenseLayer::applyActivation(const Eigen::MatrixXf& z) {
     if(act_type == Activation::None) {
         return z; // just return the linear output
@@ -56,7 +58,7 @@ Eigen::MatrixXf DenseLayer::applyActivation(const Eigen::MatrixXf& z) {
         Eigen::MatrixXf expZ = (z.rowwise() - maxes).array().exp(); // exponentiate the stabilized Z
         Eigen::RowVectorXf sumExpZ = expZ.colwise().sum(); // sum of exponentials for each column
         return expZ.array().rowwise() / sumExpZ.array(); // softmax output
-    }
+    } // softmax -> e^(zi) / sum(e^zj) over all j (columns)
     return z;
 }
 

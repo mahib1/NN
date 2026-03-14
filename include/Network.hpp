@@ -13,6 +13,8 @@ public:
     Eigen::MatrixXf forward(Eigen::MatrixXf input);
     void backward(Eigen::MatrixXf initial_grad); 
     void update(float lr); 
+    void save(const std::string& folder_name);
+    void load(const std::string& folder_name);
 };
 
 
