@@ -2,6 +2,12 @@
 #define LAYER_H
 
 #include <Eigen/Dense>
+#include <functional>
+enum class Activation {
+    ReLU,
+    Softmax,
+    None
+};
 
 class Layer {
 public: 
@@ -11,17 +17,32 @@ public:
 
 class DenseLayer : public Layer { // dense layer extends the layer class
 private:
+    // Listing the members we need in this class - 
+    // we need the wights and biases (current, and the previos ones to find the next set for backpropogation)
     Eigen::MatrixXf weights;
     Eigen::VectorXf biases;
     Eigen::MatrixXf input_cache; // last input cached for backpropogation
+    Eigen::MatrixXf z_cache; // last Z cached for backpropogation
+
+    Activation act_type; // to store the activation type for this layer 
+
+    // next we need the weights and biases gradients to update the weights and biases after backpropogation
+    Eigen::MatrixXf weight_grads;
+    Eigen::VectorXf bias_grads;
+
+    //Now we want to implement RMSProp, Adam, Momentum etc. so we need to store the previous weight and bias updates as well
+    Eigen::MatrixXf weights_m; // momentum term for weights
+    Eigen::VectorXf biases_m; // momentum term for biases
+    Eigen::MatrixXf weights_v; // RMSProp term for weights  (velocity terms)
+    Eigen::VectorXf biases_v; // RMSProp term for biases (velocity terms)
 
 
 
-
-    Eigen::MatrixXf Activation(const Eigen::MatrixXf& z, std::function<float(float)> activation_func); // ReLU activation function
+    //activation function for the layer
+    Eigen::MatrixXf Act();
 
 public:
-    DenseLayer(int in_size, int out_size);
+    DenseLayer(int in_size, int out_size, Activation activation = Activation::ReLU);
     Eigen::MatrixXf forward(const Eigen::MatrixXf& input) override;
 
     

@@ -9,12 +9,18 @@ Eigen::MatrixXf Layer::forward(const Eigen::MatrixXf& input) {
 // 1) all 0s -> creates symmetry problem, all neurons will learn the same thing
 // 2) all 1s -> also creates symmetry problem, all neurons will learn the same thing
 // 3) random values -> this is the best option, it breaks the symmetry -> use this
-DenseLayer::DenseLayer(int in_size, int out_size) {
+DenseLayer::DenseLayer(int in_size, int out_size, Activation activation) {
     //wts dims -> outputDim * inputDim
     //input to frwd func -> inputDim * batchSize
     //bias dims -> outputDim * batchSize
     weights = Eigen::MatrixXf::Random(out_size, in_size); // random initialization
     biases = Eigen::VectorXf::Random(out_size); // random initialization
+    act_type = activation; // store the activation type for this layer
+
+    weights_v = Eigen::MatrixXf::Zero(out_size, in_size); // initialize RMSProp velocity terms to zero
+    biases_v = Eigen::VectorXf::Zero(out_size); // initialize RMSProp velocity terms to zero
+    weights_m = Eigen::MatrixXf::Zero(out_size, in_size); // initialize momentum terms to zero
+    biases_m = Eigen::VectorXf::Zero(out_size); // initialize momentum terms to zero
 } // NOTE: we will discard this random function for golrot/Kaiming initialisation manually
 //but for now, this is good enough imo
 
@@ -28,18 +34,33 @@ Eigen::MatrixXf DenseLayer::forward(const Eigen::MatrixXf& input) {
 
     // We also need to save the last Inputs for backpropogation
     input_cache = input; 
-    Eigen::MatrixXf Z = (weights * input).colwise() + biases; // we get the Z matrix, 
+    z_cache = (weights * input).colwise() + biases; // we get the Z matrix, 
     //Now we do the Thresholding! f(zi) = 1 if zi > threshold else 0
 
-    Eigen::MatrixXf Act = Activation(Z, [](float z) {
-        return z > 0 ? 1.0f : 0.0f; // ReLU activation function
-    }); // dimension of this Act matrix is just outputDim * batchSize
 
-    return Act;
+    return Act(); // Apply the Activation function
+
 }
 
-Eigen::MatrixXf DenseLayer::Activation(const Eigen::MatrixXf& z, std::function<float(float)> activation_func) {
-    return z.unaryExpr(activation_func);
+Eigen::MatrixXf DenseLayer::Act() {
+    if(act_type == Activation::None) {
+        return z_cache; // if no activation, just return the linear output
+    } else if(act_type == Activation::ReLU) {
+        Eigen::MatrixXf ActMatrix = z_cache.unaryExpr([](float z) {
+            return z > 0 ? z : 0.0f; // ReLU activation function
+        });
+        return ActMatrix;
+
+    } else if(act_type == Activation::Softmax) {
+        Eigen::RowVectorXf maxes = z_cache.colwise().maxCoeff(); // for numerical stability
+        Eigen::MatrixXf expZ = (z_cache.rowwise() - maxes).array().exp(); // exponentiate the stabilized Z
+        Eigen::RowVectorXf sumExpZ = expZ.colwise().sum(); // sum of exponentials for each column
+        Eigen::MatrixXf ActMatrix = expZ.array().rowwise() / sumExpZ.array(); // softmax output
+
+        return ActMatrix;
+    }
+
+    return z_cache; // default return, should never reach here
 }
 
 

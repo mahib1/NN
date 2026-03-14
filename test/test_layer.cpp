@@ -36,7 +36,7 @@ void test_relu_logic() {
 
     for(int i=0; i < output.size(); ++i) {
         float val = output.data()[i];
-        assert(val == 0.0f || val == 1.0f);
+        assert(val >= 0); // ReLU should never output negative values
     }
     
     std::cout << "Test ReLU Logic: PASSED" << std::endl;
@@ -66,10 +66,10 @@ void test_manual_math() {
 
     // 4. Verify results
     // Expected: Neuron 1 = 3, Neuron 2 = 7
-    assert(output(0, 0) == 1);
-    assert(output(1, 0) == 1);
-    assert(output(0, 1) == 1);
-    assert(output(1, 1) == 1);
+    assert(output(0, 0) == 3);
+    assert(output(1, 0) == 7);
+    assert(output(0, 1) == 3);
+    assert(output(1, 1) == 7);
 
     std::cout << "Output:\n" << output << std::endl;
 }
