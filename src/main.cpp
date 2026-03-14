@@ -16,7 +16,6 @@ Eigen::MatrixXf captureToEigen(const sf::Image& img) {
             input(y * 28 + x, 0) = pixelValue;
         }
     }
-    std::cout << input; // Print the captured input for verification
     return input;
 }
 

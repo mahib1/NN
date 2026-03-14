@@ -99,21 +99,21 @@ void DenseLayer::update(float lr) {
     float epsilon = 1e-8f;
 
     // Calculate the momentum and velocity for weights
-    weights_m = beta1 * weights_m + (1.0f - beta1) * weight_grads; 
+    weights_m = beta1 * weights_m + (1.0f - beta1) * weight_grads; // BWm + (1-B) * dL/dW
     weights_v = beta2 * weights_v + (1.0f - beta2) * weight_grads.array().square().matrix(); 
 
-    biases_m = beta1 * biases_m + (1.0f - beta1) * bias_grads;
+    biases_m = beta1 * biases_m + (1.0f - beta1) * bias_grads; 
     biases_v = beta2 * biases_v + (1.0f - beta2) * bias_grads.array().square().matrix();
 
     // now calculate the corrected momentum and velocity for weights
-    Eigen::MatrixXf m_hat = weights_m / (1.0f - std::pow(beta1, time_step)); 
+    Eigen::MatrixXf m_hat = weights_m / (1.0f - std::pow(beta1, time_step)); // Mhat = Wm/(1 - B^t)
     Eigen::MatrixXf v_hat = weights_v / (1.0f - std::pow(beta2, time_step)); 
 
     Eigen::VectorXf m_hat_b = biases_m / (1.0f - std::pow(beta1, time_step));
     Eigen::VectorXf v_hat_b = biases_v / (1.0f - std::pow(beta2, time_step));
 
     //finally we update the weights
-    weights -= lr * (m_hat.array() / (v_hat.array().sqrt() + epsilon)).matrix(); 
+    weights -= lr * (m_hat.array() / (v_hat.array().sqrt() + epsilon)).matrix(); // Wt+1 = Wt - lr * (Mhat)/(sqrt(Vt) + epsilon)
     biases -= lr * (m_hat_b.array() / (v_hat_b.array().sqrt() + epsilon)).matrix();
 } 
 
