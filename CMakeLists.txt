@@ -7,7 +7,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # 2. Tell CMake where to find Eigen
 # Hardcoded path as per your setup
-set(EIGEN3_INCLUDE_DIR "C:\\Users\\MAHIB\\code\\git\\eigen")
+set(EIGEN3_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/eigen")
 
 # 3. Define Shared Source Files
 # We list Layer.cpp here so both the main app and tests can use it

@@ -12,17 +12,25 @@ public:
 class DenseLayer : public Layer { // dense layer extends the layer class
 private:
     Eigen::MatrixXf weights;
-    Eigen::MatrixXf biases;
+    Eigen::VectorXf biases;
     Eigen::MatrixXf input_cache; // last input cached for backpropogation
 
+
+
+
+    Eigen::MatrixXf Activation(const Eigen::MatrixXf& z, std::function<float(float)> activation_func); // ReLU activation function
+
 public:
-    DenseLayer(int in_size, int out_size, int batchSize);
+    DenseLayer(int in_size, int out_size);
     Eigen::MatrixXf forward(const Eigen::MatrixXf& input) override;
 
-private:
+    
+
+
+
     // Dev Testing functions to check if things work correctly!
     //we need a function to initialise weights and biases manually
-    void DevDenseLayer(const Eigen::MatrixXf& w, const Eigen::MatrixXf& b);
+    void DevDenseLayer(const Eigen::MatrixXf& w, const Eigen::VectorXf& b);
 };
 
 #endif

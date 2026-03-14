@@ -174,9 +174,13 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
-    <ProjectReference Include="C:\Users\MAHIB\code\Projects\NN\build\EigenTest.vcxproj">
-      <Project>{9B04A9B3-9572-3AF8-9FA8-B267B6C2E56C}</Project>
-      <Name>EigenTest</Name>
+    <ProjectReference Include="C:\Users\MAHIB\code\Projects\NN\build\main_app.vcxproj">
+      <Project>{E18BD101-DE76-3B37-B515-82BCEE657279}</Project>
+      <Name>main_app</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\MAHIB\code\Projects\NN\build\run_tests.vcxproj">
+      <Project>{C2DD61B3-74C8-3709-ADC3-49AE269E47A1}</Project>
+      <Name>run_tests</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

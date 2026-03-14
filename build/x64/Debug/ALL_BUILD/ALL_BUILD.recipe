@@ -5,7 +5,10 @@
       <FullPath>C:\Users\MAHIB\code\Projects\NN\build\x64\Debug\ZERO_CHECK</FullPath>
     </ProjectOutput>
     <ProjectOutput>
-      <FullPath>C:\Users\MAHIB\code\Projects\NN\build\Debug\EigenTest.exe</FullPath>
+      <FullPath>C:\Users\MAHIB\code\Projects\NN\build\Debug\main_app.exe</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>C:\Users\MAHIB\code\Projects\NN\build\Debug\run_tests.exe</FullPath>
     </ProjectOutput>
     <ProjectOutput>
       <FullPath>C:\Users\MAHIB\code\Projects\NN\build\x64\Debug\ALL_BUILD</FullPath>
