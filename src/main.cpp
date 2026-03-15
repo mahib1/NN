@@ -56,7 +56,7 @@ Eigen::MatrixXf captureToEigen(const sf::Image& img) {
 int main() { 
     // --- 1. Network Initialization ---
     NeuralNetwork model;
-    std::string model_folder = "C:/Users/MAHIB/code/Projects/NN/saved_model";
+    std::string model_folder = "../saved_model";
     auto adam = std::make_shared<AdamOptimizer>(0.0001f);
     model.addLayer(std::make_unique<DenseLayer>(784, 128,  adam, "layer_0", act_type::ReLU));
     model.addLayer(std::make_unique<DenseLayer>(128, 256, adam, "layer_1", act_type::ReLU));
