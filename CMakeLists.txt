@@ -90,3 +90,7 @@ target_link_libraries(run_tests PRIVATE) # Initialize
 if(OpenMP_CXX_FOUND)
     target_link_libraries(run_tests PRIVATE OpenMP::OpenMP_CXX)
 endif()
+
+target_compile_definitions(main_app PRIVATE 
+  PROJECT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}"
+)
