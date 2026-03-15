@@ -8,6 +8,10 @@
 #include "Loss.hpp"
 #include "MnistLoader.cpp"
 
+#ifndef PROJECT_ROOT 
+#define PROJECT_ROOT 
+#endif
+
 void train(NeuralNetwork& net, const Eigen::MatrixXf& X, const Eigen::MatrixXf& Y, int epochs, int batch_size);
 
 void evaluate(NeuralNetwork& net, const Eigen::MatrixXf& testX, const Eigen::MatrixXf& testY) {
@@ -56,7 +60,7 @@ Eigen::MatrixXf captureToEigen(const sf::Image& img) {
 int main() { 
     // --- 1. Network Initialization ---
     NeuralNetwork model;
-    std::string model_folder = "C:/Users/MAHIB/code/Projects/NN/saved_model";
+    std::string model_folder = std::string(PROJECT_ROOT) + "/saved_model";
     auto adam = std::make_shared<AdamOptimizer>(0.0001f);
     model.addLayer(std::make_unique<DenseLayer>(784, 128,  adam, "layer_0", act_type::ReLU));
     model.addLayer(std::make_unique<DenseLayer>(128, 256, adam, "layer_1", act_type::ReLU));
@@ -72,10 +76,10 @@ int main() {
         std::cout << "No saved model found. Initializing new model..." << std::endl;
         try {
             std::cout << "Loading MNIST Training Data..." << std::endl;
-            Eigen::MatrixXf trainX = MnistLoader::loadImages("C:/Users/MAHIB/code/Projects/NN/data/train-images.idx3-ubyte");
-            Eigen::MatrixXf trainY = MnistLoader::loadLabels("C:/Users/MAHIB/code/Projects/NN/data/train-labels.idx1-ubyte");
-            Eigen::MatrixXf testX = MnistLoader::loadImages("C:/Users/MAHIB/code/Projects/NN/data/t10k-images.idx3-ubyte");
-            Eigen::MatrixXf testY = MnistLoader::loadLabels("C:/Users/MAHIB/code/Projects/NN/data/t10k-labels.idx1-ubyte");
+            Eigen::MatrixXf trainX = MnistLoader::loadImages(std::string(PROJECT_ROOT) + "/data/train-images.idx3-ubyte");
+            Eigen::MatrixXf trainY = MnistLoader::loadLabels(std::string(PROJECT_ROOT) + "/data/train-labels.idx1-ubyte");
+            Eigen::MatrixXf testX = MnistLoader::loadImages(std::string(PROJECT_ROOT) + "/data/t10k-images.idx3-ubyte");
+            Eigen::MatrixXf testY = MnistLoader::loadLabels(std::string(PROJECT_ROOT) + "/data/t10k-labels.idx1-ubyte");
 
             std::cout << "Training START!" << std::endl;
             int epochs = 4;
