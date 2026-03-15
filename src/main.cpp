@@ -2,12 +2,13 @@
 #include <filesystem>
 #include <SFML/Graphics.hpp>
 #include <Eigen/Dense>
-#include <cmath> // For sqrt
+#include <cmath> 
 #include "Network.hpp"
 #include "Layer.hpp"
-#include "MnistLoader.cpp"
 #include "Loss.hpp"
-#include "trainer.cpp"
+#include "MnistLoader.cpp"
+
+void train(NeuralNetwork& net, const Eigen::MatrixXf& X, const Eigen::MatrixXf& Y, int epochs, int batch_size);
 
 void evaluate(NeuralNetwork& net, const Eigen::MatrixXf& testX, const Eigen::MatrixXf& testY) {
     int correct = 0;
@@ -52,13 +53,17 @@ Eigen::MatrixXf captureToEigen(const sf::Image& img) {
     return input;
 }
 
-int main() {
+int main() { 
     // --- 1. Network Initialization ---
     NeuralNetwork model;
     std::string model_folder = "C:/Users/MAHIB/code/Projects/NN/saved_model";
-    model.addLayer(new DenseLayer(784, 128, Activation::ReLU));
-    model.addLayer(new DenseLayer(128, 64, Activation::ReLU));
-    model.addLayer(new DenseLayer(64, 10, Activation::Softmax));
+    auto adam = std::make_shared<AdamOptimizer>(0.0001f);
+    model.addLayer(std::make_unique<DenseLayer>(784, 128,  adam, "layer_0", act_type::ReLU));
+    model.addLayer(std::make_unique<DenseLayer>(128, 256, adam, "layer_1", act_type::ReLU));
+    model.addLayer(std::make_unique<DenseLayer>(256, 128, adam, "layer_2", act_type::ReLU));
+    model.addLayer(std::make_unique<DenseLayer>(128, 64, adam, "layer_3", act_type::ReLU));
+    model.addLayer(std::make_unique<DenseLayer>(64, 10, adam, "layer_4", act_type::LeReLU));
+    model.addLayer(std::make_unique<DenseLayer>(10, 10, adam, "layer_5", act_type::Softmax));
 
     if(std::filesystem::exists(model_folder)) {
         std::cout << "Loading existing model from " << model_folder << "..." << std::endl;
@@ -72,9 +77,9 @@ int main() {
             Eigen::MatrixXf testX = MnistLoader::loadImages("C:/Users/MAHIB/code/Projects/NN/data/t10k-images.idx3-ubyte");
             Eigen::MatrixXf testY = MnistLoader::loadLabels("C:/Users/MAHIB/code/Projects/NN/data/t10k-labels.idx1-ubyte");
 
-            std::cout << "Training model for 5 epochs..." << std::endl;
+            std::cout << "Training START!" << std::endl;
             int epochs = 4;
-            int batch_size = 5;
+            int batch_size = 1;
 
             train(model, trainX, trainY, epochs, batch_size);
             evaluate(model, testX, testY); 
@@ -88,7 +93,7 @@ int main() {
     }
 
     // --- 2. Create Anti-Aliased Brush Texture ---
-    const int brushRes = 64; // High res for the brush texture
+    const int brushRes = 128; // High res for the brush texture
     sf::Texture brushTexture;
     sf::Image brushImage;
     brushImage.create(brushRes, brushRes);

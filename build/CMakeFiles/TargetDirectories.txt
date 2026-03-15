@@ -1,4 +1,0 @@
-C:/Users/MAHIB/code/Projects/NN/build/CMakeFiles/main_app.dir
-C:/Users/MAHIB/code/Projects/NN/build/CMakeFiles/run_tests.dir
-C:/Users/MAHIB/code/Projects/NN/build/CMakeFiles/ALL_BUILD.dir
-C:/Users/MAHIB/code/Projects/NN/build/CMakeFiles/ZERO_CHECK.dir

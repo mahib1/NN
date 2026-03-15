@@ -2,20 +2,35 @@
 #define LAYER_H
 
 #include <Eigen/Dense>
+#include <Optimizer.hpp>
 #include <functional>
+#include <string>
+#include <memory>
 #include <vector>
+#include <Activator.hpp>
 
-enum class Activation {
-    ReLU,
-    Softmax,
-    None
-};
 
 class Layer {
 public: 
-    virtual Eigen::MatrixXf forward(const Eigen::MatrixXf& input);
+    //MAIN IMPL FUNCS
+    virtual Eigen::MatrixXf forward(const Eigen::MatrixXf& input) = 0;
+    virtual Eigen::MatrixXf backward(const Eigen::MatrixXf& grad_output) = 0;
+    virtual void update() = 0;
+
+
+    //TESTING/NETWORK FUNCS
+    virtual bool hasParameters() const { return false; }
+    virtual bool hasGrads() const { return false; }
+    virtual Eigen::MatrixXf getWeights() const { return Eigen::MatrixXf(); }
+    virtual Eigen::VectorXf getBiases() const { return Eigen::VectorXf(); }
+    virtual Eigen::MatrixXf getWeightGrads() const { return Eigen::MatrixXf(); }
+    virtual Eigen::VectorXf getBiasGrads() const { return Eigen::VectorXf(); } 
+    virtual void setParameters(const Eigen::MatrixXf& w, const Eigen::VectorXf& b) {} 
+    virtual void setGrads(const Eigen::MatrixXf& wg, const Eigen::VectorXf& bg) {}
+    virtual std::shared_ptr<Optimizer> getOptimizer() const { return nullptr; }
     virtual ~Layer() = default;
 }; // dummy virtual class to implement layer functions
+
 
 class DenseLayer : public Layer { // dense layer extends the layer class
 private:
@@ -26,52 +41,58 @@ private:
     Eigen::MatrixXf input_cache; // last input cached for backpropogation
     Eigen::MatrixXf z_cache; // last Z cached for backpropogation
 
-    Activation act_type; // to store the activation type for this layer 
+    Activator activator; // to store the activation type for this layer 
 
     // next we need the weights and biases gradients to update the weights and biases after backpropogation
     Eigen::MatrixXf weight_grads;
     Eigen::VectorXf bias_grads;
 
-    //Now we want to implement RMSProp, Adam, Momentum etc. so we need to store the previous weight and bias updates as well
-    Eigen::MatrixXf weights_m; // momentum term for weights
-    Eigen::VectorXf biases_m; // momentum term for biases
-    Eigen::MatrixXf weights_v; // RMSProp term for weights  (velocity terms)
-    Eigen::VectorXf biases_v; // RMSProp term for biases (velocity terms)
-
-    int time_step = 0; // to keep track of the time step for Adam optimizer 
+    std::shared_ptr<Optimizer> optimizer; //Optmizer abstraction!
+    std::string layer_name; // id for the optmizer
 
     // santa's lil helpers    
     // WX + B
-    Eigen::MatrixXf computeLinearOp(const Eigen::MatrixXf& input);
-    
-    // activation function for the layer (handles ReLU, Softmax, None)
-    Eigen::MatrixXf applyActivation(const Eigen::MatrixXf& z);
-    
-    // calc local gradient (delta) based on the activation type
-    Eigen::MatrixXf computeActivationGrad(const Eigen::MatrixXf& grad_output);
-    
+    Eigen::MatrixXf computeLinearOp(const Eigen::MatrixXf& input); 
+
     // calc dL/dW and dL/dB
     void computeParameterGrads(const Eigen::MatrixXf& delta);
 
 public:
-    DenseLayer(int in_size, int out_size, Activation activation = Activation::ReLU);
+    //MAIN IMPLEMENTATION FUNCTIONS
+    DenseLayer(int in_size, int out_size, std::shared_ptr<Optimizer> opt, std::string name, act_type _act = act_type::ReLU);
     Eigen::MatrixXf forward(const Eigen::MatrixXf& input) override;
-    Eigen::MatrixXf backward(const Eigen::MatrixXf& grad_output); 
-    void update(float lr);
+    Eigen::MatrixXf backward(const Eigen::MatrixXf& grad_output) override; 
+    void update() override;
 
+
+
+
+
+
+    // TESTING FUNCTIONS
     // Dev testing functions to check if things work correctly 
     // we need a function to initialise weights and biases manually
-    void DevDenseLayer(const Eigen::MatrixXf& w, const Eigen::VectorXf& b);
+    void setParameters(const Eigen::MatrixXf& w, const Eigen::VectorXf& b) override;
     
     // manual injection of gradients for testing the optimizer logic
-    void setWeightGrads(const Eigen::MatrixXf& wg);
-    void setBiasGrads(const Eigen::VectorXf& bg);
+    void setGrads(const Eigen::MatrixXf& wg, const Eigen::VectorXf& bg) override;
 
     // getters to verify internal states in unit tests
-    Eigen::MatrixXf getWeights() const;
-    Eigen::VectorXf getBiases() const;
-    Eigen::MatrixXf getWeightGrads() const;
-    Eigen::VectorXf getBiasGrads() const;
+    Eigen::MatrixXf getWeights() const override;
+    Eigen::VectorXf getBiases() const override;
+    Eigen::MatrixXf getWeightGrads() const override;
+    Eigen::VectorXf getBiasGrads() const override;
+    std::shared_ptr<Optimizer> getOptimizer() const override { return optimizer; }
+    inline bool hasParameters() const override { return true; }
+    inline bool hasGrads() const override { return true; }
+};
+
+class ConvLayer : public Layer {
+
+};
+
+class flattenLayer : public Layer {
+
 };
 
 #endif

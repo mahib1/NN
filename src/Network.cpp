@@ -5,7 +5,7 @@
 
 Eigen::MatrixXf NeuralNetwork::forward(Eigen::MatrixXf input) {
     for (auto& layer : layers) {
-        input = layer->forward(input);
+        input = layer -> forward(input);
     }
     return input;
 }
@@ -13,13 +13,18 @@ Eigen::MatrixXf NeuralNetwork::forward(Eigen::MatrixXf input) {
 void NeuralNetwork::backward(Eigen::MatrixXf initial_grad) {
     Eigen::MatrixXf grad = initial_grad;
     for (int i = layers.size() - 1; i >= 0; i--) {
-        grad = layers[i]->backward(grad);
+        grad = layers[i] -> backward(grad);
     }
 }
 
-void NeuralNetwork::update(float lr) {
+void NeuralNetwork::update() {
     for (auto& layer : layers) {
-        layer->update(lr);
+        layer -> update();
+        // std::cout << layer -> getWeights().norm() << std::endl; // Debug: print weight norm after update
+    }
+
+    if(!layers.empty()) {
+        layers[0] -> getOptimizer() -> step();
     }
 }
 
@@ -28,14 +33,15 @@ void NeuralNetwork::save(const std::string& folder_name) {
     std::filesystem::create_directory(folder_name);
 
     for (int i = 0; i < layers.size(); ++i) {
+        if(!(layers[i] -> hasParameters())) continue; 
         std::string w_path = folder_name + "/layer_" + std::to_string(i) + "_w.bin";
         std::string b_path = folder_name + "/layer_" + std::to_string(i) + "_b.bin";
 
         std::ofstream w_file(w_path, std::ios::binary);
         std::ofstream b_file(b_path, std::ios::binary);
 
-        Eigen::MatrixXf w = layers[i]->getWeights();
-        Eigen::VectorXf b = layers[i]->getBiases();
+        Eigen::MatrixXf w = layers[i] -> getWeights();
+        Eigen::VectorXf b = layers[i] -> getBiases();
 
         // Write raw memory buffer to disk
         w_file.write(reinterpret_cast<const char*>(w.data()), w.size() * sizeof(float));
@@ -46,6 +52,7 @@ void NeuralNetwork::save(const std::string& folder_name) {
 
 void NeuralNetwork::load(const std::string& folder_name) {
     for (int i = 0; i < layers.size(); ++i) {
+        if(!(layers[i] -> hasParameters())) continue;
         std::string w_path = folder_name + "/layer_" + std::to_string(i) + "_w.bin";
         std::string b_path = folder_name + "/layer_" + std::to_string(i) + "_b.bin";
 
@@ -57,14 +64,14 @@ void NeuralNetwork::load(const std::string& folder_name) {
         }
 
         // Create temporary matrices to read into
-        Eigen::MatrixXf w = layers[i]->getWeights();
-        Eigen::VectorXf b = layers[i]->getBiases();
+        Eigen::MatrixXf w = layers[i] -> getWeights();
+        Eigen::VectorXf b = layers[i] -> getBiases();
 
         w_file.read(reinterpret_cast<char*>(w.data()), w.size() * sizeof(float));
         b_file.read(reinterpret_cast<char*>(b.data()), b.size() * sizeof(float));
 
         // Use your existing DevDenseLayer or a new setter to apply them
-        layers[i]->DevDenseLayer(w, b);
+        layers[i] -> setParameters(w, b);
     }
     std::cout << "Model weights loaded successfully!" << std::endl;
 }

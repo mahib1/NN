@@ -3,6 +3,8 @@
 #include <Loss.hpp>
 
 void train(NeuralNetwork& net, const Eigen::MatrixXf& X, const Eigen::MatrixXf& Y, int epochs, int batch_size) {
+    std::cout << "Data check: X cols = " << X.cols() << ", Y cols = " << Y.cols() << std::endl;
+    if(X.cols() == 0) { std::cerr << "CRITICAL: No data loaded!" << std::endl; return; }
     CrossEntropyLoss loss_func;
     float learning_rate = 0.001f; // Standard for Adam
 
@@ -28,7 +30,7 @@ void train(NeuralNetwork& net, const Eigen::MatrixXf& X, const Eigen::MatrixXf& 
             net.backward(grad);
 
             // 4. Update Weights
-            net.update(learning_rate);
+            net.update();
         }
         
         std::cout << "Epoch " << epoch + 1 << " | Avg Loss: " << total_loss / (X.cols() / batch_size) << std::endl;

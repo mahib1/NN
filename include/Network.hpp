@@ -2,20 +2,29 @@
 #define NETWORK_HPP
 
 #include <Layer.hpp>
+#include <vector>
+#include <memory>
 
 class NeuralNetwork {
 private:
-    std::vector<DenseLayer*> layers; 
+    //Layer* helps store any child class
+    std::vector<std::unique_ptr<Layer>> layers; 
 
 public:
-    inline void addLayer(DenseLayer* layer) {layers.push_back(layer);}
+    // Takes ownership of the layer
+    void addLayer(std::unique_ptr<Layer> layer) {
+        layers.push_back(std::move(layer));
+    }
 
     Eigen::MatrixXf forward(Eigen::MatrixXf input);
     void backward(Eigen::MatrixXf initial_grad); 
-    void update(float lr); 
+    
+    // Notice: we don't need to pass lr here if the Optimizer object 
+    // already knows it. We just tell the layers to update.
+    void update(); 
+
     void save(const std::string& folder_name);
     void load(const std::string& folder_name);
 };
 
-
-#endif // NETWORK_HPP
+#endif
