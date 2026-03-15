@@ -37,9 +37,9 @@ target_include_directories(main_app PRIVATE
 # Link SFML to the main application
 target_link_libraries(main_app sfml-graphics sfml-window sfml-system)
 
-# # 5. Unit Test Target (Usually no SFML needed for math tests)
-# add_executable(run_tests test/test_dense_layer.cpp ${COMMON_SOURCES})
-# target_include_directories(run_tests PRIVATE 
-#     include 
-#     ${EIGEN3_INCLUDE_DIR}
-# )
+# 5. Unit Test Target (Usually no SFML needed for math tests)
+add_executable(run_tests test/test_dense_layer.cpp ${COMMON_SOURCES})
+target_include_directories(run_tests PRIVATE 
+    include 
+    ${EIGEN3_INCLUDE_DIR}
+)

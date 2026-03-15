@@ -11,8 +11,7 @@ private:
     std::vector<std::unique_ptr<Layer>> layers; 
 
 public:
-    // Takes ownership of the layer
-    void addLayer(std::unique_ptr<Layer> layer) {
+    inline void addLayer(std::unique_ptr<Layer> layer) {
         layers.push_back(std::move(layer));
     }
 
