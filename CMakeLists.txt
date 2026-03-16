@@ -40,6 +40,7 @@ endif()
 # 4. Define Source Files
 # Using GLOB_RECURSE to ensure all optimizer implementations are caught
 file(GLOB_RECURSE OPTIMIZER_SOURCES "src/Optimizers/*.cpp")
+file(GLOB_RECURSE REGULATOR_SOURCES "src/Regulators/*.cpp")
 
 set(COMMON_SOURCES 
     src/Layer.cpp
@@ -48,6 +49,7 @@ set(COMMON_SOURCES
     src/Activator.cpp
     src/trainer.cpp
     ${OPTIMIZER_SOURCES}
+    ${REGULATOR_SOURCES}
 )
 
 # 5. Main Application Target

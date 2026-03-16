@@ -18,9 +18,11 @@ public:
     Eigen::MatrixXf forward(Eigen::MatrixXf input);
     void backward(Eigen::MatrixXf initial_grad); 
     
-    // Notice: we don't need to pass lr here if the Optimizer object 
+    // don't need to pass lr here if the Optimizer object 
     // already knows it. We just tell the layers to update.
     void update(); 
+
+    inline void setTraining(bool training) { for (auto& layer : layers) layer -> setTraining(training); }
 
     void save(const std::string& folder_name);
     void load(const std::string& folder_name);

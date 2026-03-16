@@ -3,6 +3,7 @@
 
 #include <Eigen/Dense>
 #include <Optimizer.hpp>
+#include <Regulator.hpp>
 #include <functional>
 #include <string>
 #include <memory>
@@ -27,6 +28,8 @@ public:
     virtual Eigen::VectorXf getBiasGrads() const { return Eigen::VectorXf(); } 
     virtual void setParameters(const Eigen::MatrixXf& w, const Eigen::VectorXf& b) {} 
     virtual void setGrads(const Eigen::MatrixXf& wg, const Eigen::VectorXf& bg) {}
+    virtual void addRegulator(std::shared_ptr<Regulator> reg) {}
+    virtual void setTraining(bool training) {}
     virtual std::shared_ptr<Optimizer> getOptimizer() const { return nullptr; }
     virtual ~Layer() = default;
 }; // dummy virtual class to implement layer functions
@@ -41,7 +44,8 @@ private:
     Eigen::MatrixXf input_cache; // last input cached for backpropogation
     Eigen::MatrixXf z_cache; // last Z cached for backpropogation
 
-    Activator activator; // to store the activation type for this layer 
+    Activator activator; // to store the activation type for this layer  
+    RegManager regulator; //Regulator abstraction!
 
     // next we need the weights and biases gradients to update the weights and biases after backpropogation
     Eigen::MatrixXf weight_grads;
@@ -60,6 +64,8 @@ private:
 public:
     //MAIN IMPLEMENTATION FUNCTIONS
     DenseLayer(int in_size, int out_size, std::shared_ptr<Optimizer> opt, std::string name, act_type _act = act_type::ReLU);
+    inline void addRegulator(std::shared_ptr<Regulator> reg) override { regulator.addRegulator(reg); }
+    inline void setTraining(bool training) override { regulator.setTrainingMode(training); }
     Eigen::MatrixXf forward(const Eigen::MatrixXf& input) override;
     Eigen::MatrixXf backward(const Eigen::MatrixXf& grad_output) override; 
     void update() override;

@@ -21,6 +21,7 @@ DenseLayer::DenseLayer(int in_size, int out_size, std::shared_ptr<Optimizer> opt
     biases = Eigen::VectorXf::Zero(out_size); // Start biases at 0
     activator = Activator(_act); // store the activation type for this layer
     optimizer = opt;
+    regulator = RegManager(); 
     layer_name = name;
 
 } 
@@ -34,7 +35,9 @@ Eigen::MatrixXf DenseLayer::forward(const Eigen::MatrixXf& input) {
     z_cache = computeLinearOp(input); 
 
     // Apply the Activation function
-    return activator.applyActivation(z_cache);
+    Eigen::MatrixXf activations = activator.applyActivation(z_cache);
+    regulator.applyForward(activations); 
+    return activations;
 }
 
 // Helper to handle the raw matrix math WX + B
@@ -48,7 +51,10 @@ Eigen::MatrixXf DenseLayer::computeLinearOp(const Eigen::MatrixXf& input) {
 
 Eigen::MatrixXf DenseLayer::backward(const Eigen::MatrixXf& grad_output) {
     // 1. Calculate the activation gradient (Delta)
-    Eigen::MatrixXf delta = activator.applyActivationGrad(grad_output, z_cache); 
+    Eigen::MatrixXf grad_upstream = grad_output; 
+    regulator.applyBackward(grad_upstream);
+
+    Eigen::MatrixXf delta = activator.applyActivationGrad(grad_upstream, z_cache); 
     
     // 2. Calculate gradients for the weights and biases
     computeParameterGrads(delta);
@@ -71,6 +77,8 @@ void DenseLayer::update() {
     // Update weights and biases using the optimizer
     optimizer->update(weights, weight_grads, layer_name + "_w");
     optimizer->update(biases, bias_grads, layer_name + "_b");
+
+    regulator.applyUpdate(optimizer, layer_name);
 } 
 
 

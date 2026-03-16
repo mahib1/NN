@@ -12,9 +12,10 @@
 #define PROJECT_ROOT 
 #endif
 
-void train(NeuralNetwork& net, const Eigen::MatrixXf& X, const Eigen::MatrixXf& Y, int epochs, int batch_size);
+void train(NeuralNetwork& net, Eigen::MatrixXf& X, Eigen::MatrixXf& Y, int epochs, int batch_size);
 
 void evaluate(NeuralNetwork& net, const Eigen::MatrixXf& testX, const Eigen::MatrixXf& testY) {
+    net.setTraining(false);
     int correct = 0;
     Eigen::MatrixXf predictions = net.forward(testX);
 
@@ -59,15 +60,25 @@ Eigen::MatrixXf captureToEigen(const sf::Image& img) {
 
 int main() { 
     // --- 1. Network Initialization ---
-    NeuralNetwork model;
     std::string model_folder = std::string(PROJECT_ROOT) + "/saved_model";
-    auto adam = std::make_shared<AdamOptimizer>(0.0001f);
-    model.addLayer(std::make_unique<DenseLayer>(784, 128,  adam, "layer_0", act_type::ReLU));
-    model.addLayer(std::make_unique<DenseLayer>(128, 256, adam, "layer_1", act_type::ReLU));
-    model.addLayer(std::make_unique<DenseLayer>(256, 128, adam, "layer_2", act_type::ReLU));
-    model.addLayer(std::make_unique<DenseLayer>(128, 64, adam, "layer_3", act_type::ReLU));
-    model.addLayer(std::make_unique<DenseLayer>(64, 10, adam, "layer_4", act_type::LeReLU));
-    model.addLayer(std::make_unique<DenseLayer>(10, 10, adam, "layer_5", act_type::Softmax));
+    NeuralNetwork model;
+    auto adam = std::make_shared<AdamOptimizer>(0.001f);
+
+    // Build the network with Batchnorm and Dropout
+    auto l0 = std::make_unique<DenseLayer>(784, 256, adam, "l0", act_type::ReLU);
+    model.addLayer(std::move(l0));
+
+    auto l1 = std::make_unique<DenseLayer>(256, 128, adam, "l1", act_type::LeReLU);
+    l1->addRegulator(std::make_shared<BatchnormRegulator>(128));
+    l1->addRegulator(std::make_shared<DropoutRegulator>(0.4f));
+    model.addLayer(std::move(l1));
+
+    auto l2 = std::make_unique<DenseLayer>(128, 64, adam, "l2", act_type::LeReLU);
+    l2->addRegulator(std::make_shared<DropoutRegulator>(0.2f));
+    model.addLayer(std::move(l2));
+
+    auto l3 = std::make_unique<DenseLayer>(64, 10, adam, "out", act_type::Softmax);
+    model.addLayer(std::move(l3));
 
     if(std::filesystem::exists(model_folder)) {
         std::cout << "Loading existing model from " << model_folder << "..." << std::endl;
@@ -83,7 +94,7 @@ int main() {
 
             std::cout << "Training START!" << std::endl;
             int epochs = 4;
-            int batch_size = 1;
+            int batch_size = 24;
 
             train(model, trainX, trainY, epochs, batch_size);
             evaluate(model, testX, testY); 
